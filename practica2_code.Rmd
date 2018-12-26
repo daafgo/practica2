@@ -1,20 +1,49 @@
 ---
 title: "Practica 2"
-author: "Daniel Afonso González"
+author: "Daniel Afonso GonzÃ¡lez"
 date: "24 de diciembre de 2018"
-output: pdf_document
-
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '2'
+  pdf_document:
+    toc: yes
+    toc_depth: 2
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Descripción del dataset. ¿Por qué es importante y qué pregunta/problema pretende responder?
+# Descripción del dataset. 
+##¿Por qué es importante y qué pregunta/problema pretende responder?
+_Los datos con los que trabajaremos en esta practica se trata de la información por pais, genero y año de la tasa de suicidio a lo largo del mundo, Me parece que tras esta estadistica podemos encontrar patrones que ayuden a explicar el porque de estos casos y ayudar en lo posible a esclarecer las casuas del mismo, asi como tambien poder comparar tanto la evolución como la actual situación en distintos paises del mundo como España, EE.UU., Francia, Italia, Alemania y Reino Unido._
+
 # Integración y selección de los datos de interés a analizar.
+```{r}
+dataFrame=read.csv("who_suicide_statistics.csv", header = TRUE)
+#dataFrame[dataFrame$year==2005 &  dataFrame$country=="Spain",]
+summary((dataFrame))
+
+```
+_en este resumen del data set podemos ver contamos con una base datos que en algunos casos contiene estadisticas desde 1979, tambien observamos como contamos con algunos valores Nulos (NA's) en cuanto a número de suicidios y población, esto se puede deber a que en determinados paises no contamos con datos oficiales para estos dos campos hasta la caida del muro de berlin y el fin de la unión sovietica_
+
 # Limpieza de los datos.
-## ¿Los datos contienen ceros o elementos vacíos? ¿Cómo gestionarías cada uno
-de estos casos?
+
+_como podemos observar si observamos una tupla del data set los grupos de edad vienen definidos como un vector de categorias con el intervalo que representan y la palabra years, a continuación limpiaremos la inclusion de la unidad years en el data set con la siguiente instrucción_
+```{r}
+paises <- c("Spain","Italy","France","United States of America
+", "United Kingdom","Germany")
+
+#dataFrame[]
+```
+
+## ¿Los datos contienen ceros o elementos vacíos?
+_Contamos con datos desde 1985 para algunos paises pero en la mayoria de paises esos datos no se encuentran disponibles,quizas porque no publicaban estadisiticas oficiales, o el creador de este dataset no pudo acceder a ella._
+
+##¿Cómo gestionarías cada uno de estos casos?
+_Debemos diferenciar los elementos vacios de los 0, puesto que para el primer caso, por ejemplo, si nos encotramos realizando una media aritmetica del numero de sucidios por año en cada pais, no deberiamos incluir en el recuento los años de los que no tenemos datos, pero si los de aquellos años en el que el numero de suicidios fue 0_
 ## Identificación y tratamiento de valores extremos.
 # Análisis de los datos.
 ## Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar).
