@@ -33,10 +33,33 @@ _en este resumen del data set podemos ver contamos con una base datos que en alg
 
 _como podemos observar si observamos una tupla del data set los grupos de edad vienen definidos como un vector de categorias con el intervalo que representan y la palabra years, a continuación limpiaremos la inclusion de la unidad years en el data set con la siguiente instrucción_
 ```{r}
-paises <- c("Spain","Italy","France","United States of America
-", "United Kingdom","Germany")
+paises <- c("Spain","Italy","France","United States of America", "United Kingdom","Germany")
 
-#dataFrame[]
+df <-dataFrame[dataFrame$country %in% paises,]
+
+summary(df)
+```
+_como podemos observar la variable country cuenta con elementos que no nos interesan en este estudio es por lo que la refactorizaremos para incluir solo los valores de nuestra muestra_
+```{r}
+df$country<-factor( df$country)
+summary(df$country)
+
+df[df$country=="Spain" & df$year==1999,]
+unique(df$year)
+```
+_como podemos observar tenemos los datos desagrupados por sexo,año, y grupo de edad, para la comparación tambien necesitaremos los totales de estos estos valores, los cuales calcularemos mediante el siguiente codigo en R_
+
+```{r}
+for (pais in paises){
+  for (y in unique(df$year)){
+   newdata<-  data.frame(country=pais, year=y,sex="all",age="all",suicides_no=sum(df[df$country==pais & df$year==y,"suicides_no"]),population=sum(df[df$country==pais & df$year==y,"population"]))
+   df= rbind(df,newdata)
+    
+    }
+  
+}
+df[df$country=="Spain" & df$year==1999,]
+
 ```
 
 ## ¿Los datos contienen ceros o elementos vacíos?
@@ -45,7 +68,14 @@ _Contamos con datos desde 1985 para algunos paises pero en la mayoria de paises 
 ##¿Cómo gestionarías cada uno de estos casos?
 _Debemos diferenciar los elementos vacios de los 0, puesto que para el primer caso, por ejemplo, si nos encotramos realizando una media aritmetica del numero de sucidios por año en cada pais, no deberiamos incluir en el recuento los años de los que no tenemos datos, pero si los de aquellos años en el que el numero de suicidios fue 0_
 ## Identificación y tratamiento de valores extremos.
+para identificar valores extremos podriamos hacerlo de manera visual mediante un grafico como el que se muestra a continuación o hacer uso de valores centinela, como en nuestro caso se trata de unos datos oficiales no deberiamos encontrarnos con ninguno de estos problemas.
+
+```{r}
+boxplot(df[df$country=="Spain" & df$sex!="all","suicides_no"])
+```
 # Análisis de los datos.
+
+
 ## Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar).
 ## Comprobación de la normalidad y homogeneidad de la varianza.
 ## Aplicación de pruebas estadísticas para comparar los grupos de datos.
