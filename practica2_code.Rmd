@@ -35,7 +35,7 @@ _como podemos observar si observamos una tupla del data set los grupos de edad v
 ```{r}
 paises <- c("Spain","Italy","France","United States of America", "United Kingdom","Germany")
 
-df <-dataFrame[dataFrame$country %in% paises,]
+df <-dataFrame[dataFrame$country %in% paises & dataFrame$year>=2009 & dataFrame$year<2015,]
 
 summary(df)
 ```
@@ -44,7 +44,7 @@ _como podemos observar la variable country cuenta con elementos que no nos inter
 df$country<-factor( df$country)
 summary(df$country)
 
-df[df$country=="Spain" & df$year==1999,]
+df[df$country=="Spain" & df$year==2010,]
 unique(df$year)
 ```
 _como podemos observar tenemos los datos desagrupados por sexo,año, y grupo de edad, para la comparación tambien necesitaremos los totales de estos estos valores, los cuales calcularemos mediante el siguiente codigo en R_
@@ -58,28 +58,75 @@ for (pais in paises){
     }
   
 }
-df[df$country=="Spain" & df$year==1999,]
+
 
 ```
 
 ## ¿Los datos contienen ceros o elementos vacíos?
-_Contamos con datos desde 1985 para algunos paises pero en la mayoria de paises esos datos no se encuentran disponibles,quizas porque no publicaban estadisiticas oficiales, o el creador de este dataset no pudo acceder a ella._
+_Contamos con datos desde 1985 para algunos paises pero en la mayoria de paises esos datos no se encuentran disponibles,quizas porque no publicaban estadisiticas oficiales, o el creador de este dataset no pudo acceder a ella. Así mismo tb contamos con los datos de 2015 para algunos de ellos pero no para todos por esto mismo como se puede observar en el filtrado previo solo tenemos en cuenta los años 2009,2010,2011,2012,2013 y 2014_
 
 ##¿Cómo gestionarías cada uno de estos casos?
 _Debemos diferenciar los elementos vacios de los 0, puesto que para el primer caso, por ejemplo, si nos encotramos realizando una media aritmetica del numero de sucidios por año en cada pais, no deberiamos incluir en el recuento los años de los que no tenemos datos, pero si los de aquellos años en el que el numero de suicidios fue 0_
 ## Identificación y tratamiento de valores extremos.
-para identificar valores extremos podriamos hacerlo de manera visual mediante un grafico como el que se muestra a continuación o hacer uso de valores centinela, como en nuestro caso se trata de unos datos oficiales no deberiamos encontrarnos con ninguno de estos problemas.
+_Para identificar valores extremos podriamos hacerlo de manera visual mediante un grafico como el que se muestra a continuación o hacer uso de valores centinela, como en nuestro caso se trata de unos datos oficiales no deberiamos encontrarnos con ninguno de estos problemas._
 
 ```{r}
 boxplot(df[df$country=="Spain" & df$sex!="all","suicides_no"])
+boxplot(df[df$country=="France" & df$sex!="all","suicides_no"])
 ```
+_Al observar los datos separados por cada una de las categorias podriamos concluir que encontramos muchos outliners, pero esto se debe a que la mayoria de suicidios se concentran en la edad adulta a partir de los 15 años y por lo tanto los datos antes de esta etapa vital falsean esta estadistica, si por ejemplo tenemos en cuanta el total de suicidios vemos como no hay ningun dato que sobresalga salvo los altos indices de suicidio detectados en francia en comparación con el resto de paises._
+```{r}
+for (pais in paises){
+  boxplot(df[df$country==pais & df$age=="all","suicides_no"],main = pais)
+}
+```
+
 # Análisis de los datos.
 
-
 ## Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar).
+_Los datos que queremos analizar ya se encuentran filtrados en puntos anteriores fruto de los procesos de limpieza y extraccion del conjunto de datos almacenados en el dataset original_
+
 ## Comprobación de la normalidad y homogeneidad de la varianza.
+
+para esta comprobación de la normalidad podemos utilizar el F-test para comprobar la diferencia entre dos poblaciones, en nuestro caso para simplificar, las totales frente a las parciales de cada grupo de edad.
+```{r}
+aggregate(suicides_no~age, data = df, FUN = var)
+
+var.test(x = df[df$age == "all", "suicides_no"],
+         y = df[df$age != "all", "suicides_no"],)
+
+```
+_Podemos observar como el test no encuentra diferencias significativas entre las varianzas de los dos grupos. Si bien este no es metodo muy recomendable si no sabemos a ciencia cierta si nuestra poblaciones se distribuyen de forma norma, es por esto que utilizaremos el test de levene mucho menos sensible a la normalidad de las poblaciones, y que permite comparar varias poblaciones a la vez._
+
+```{r}
+#install.packages("car")
+library(car)
+leveneTest(y = df$suicides_no, group = df$country, center = "median",data=df)
+
+
+```
+
+_Como podemos observar el P-valor es menor que 0,05 por lo que se rechaza la hipótesis nula y por lo que podemos deducir que al menos un grupo presenta varianzas diferentes._
+
+
 ## Aplicación de pruebas estadísticas para comparar los grupos de datos.
 En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc.
+_Si intentamos comparar directamente el numero de suicidios sin normalizar obtenemos resultados como estos_
+```{r}
+#install.packages("ggplot2")
+library(ggplot2)
+
+ggplot(df[df$age == "all",], aes(x = year, y =suicides_no , colour = country))+geom_point()
+```
+_Es por ello que necesitamos normalizar el numero de suicidios en funcion de la poblacion que representan_
+```{r}
+df$suicides_norm<-(df$suicides_no/df$population)
+ggplot(df[df$age == "all",], aes(x = year, y =suicides_norm , colour = country))+geom_point()
+df[df$age == "all" & df$country=="Spain","suicides_norm"]/df[df$age == "all" & df$country=="France","suicides_norm"]
+```
+_ahora con los datos normalizados podemos observar a simple vista como francia tiene un porcentaje mayor de suicidios en comparación con los demas paises._
+
+df
 # Representación de los resultados a partir de tablas y gráficas.
 # Resolución del problema.
 A partir de los resultados obtenidos, ¿cuáles son las conclusiones? ¿Los resultados permiten responder al problema?
