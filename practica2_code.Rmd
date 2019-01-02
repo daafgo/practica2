@@ -86,6 +86,8 @@ for (pais in paises){
 ## Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar).
 _Los datos que queremos analizar ya se encuentran filtrados en puntos anteriores fruto de los procesos de limpieza y extraccion del conjunto de datos almacenados en el dataset original_
 
+_Aparte de la comparacion de los datos por paises, intentaremos determinar si hay diferencias en funcion del sexo y del grupo de edad, en los diferentes paises_
+
 ## Comprobación de la normalidad y homogeneidad de la varianza.
 
 para esta comprobación de la normalidad podemos utilizar el F-test para comprobar la diferencia entre dos poblaciones, en nuestro caso para simplificar, las totales frente a las parciales de cada grupo de edad.
@@ -96,6 +98,7 @@ var.test(x = df[df$age == "all", "suicides_no"],
          y = df[df$age != "all", "suicides_no"],)
 
 ```
+
 _Podemos observar como el test no encuentra diferencias significativas entre las varianzas de los dos grupos. Si bien este no es metodo muy recomendable si no sabemos a ciencia cierta si nuestra poblaciones se distribuyen de forma norma, es por esto que utilizaremos el test de levene mucho menos sensible a la normalidad de las poblaciones, y que permite comparar varias poblaciones a la vez._
 
 ```{r}
@@ -111,6 +114,7 @@ _Como podemos observar el P-valor es menor que 0,05 por lo que se rechaza la hip
 
 ## Aplicación de pruebas estadísticas para comparar los grupos de datos.
 En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc.
+
 _Si intentamos comparar directamente el numero de suicidios sin normalizar obtenemos resultados como estos_
 ```{r}
 #install.packages("ggplot2")
@@ -118,15 +122,43 @@ library(ggplot2)
 
 ggplot(df[df$age == "all",], aes(x = year, y =suicides_no , colour = country))+geom_point()
 ```
+
 _Es por ello que necesitamos normalizar el numero de suicidios en funcion de la poblacion que representan_
 ```{r}
 df$suicides_norm<-(df$suicides_no/df$population)
 ggplot(df[df$age == "all",], aes(x = year, y =suicides_norm , colour = country))+geom_point()
-df[df$age == "all" & df$country=="Spain","suicides_norm"]/df[df$age == "all" & df$country=="France","suicides_norm"]
+
+
 ```
 _ahora con los datos normalizados podemos observar a simple vista como francia tiene un porcentaje mayor de suicidios en comparación con los demas paises._
 
-df
+```{r}
+#diferencias entre francia y los principales paises por año 
+for (pais in paises){
+  porcentaje<-(1-df[df$age == "all" & df$country==pais,"suicides_norm"]/df[df$age == "all" & df$country=="France","suicides_norm"])*100
+  print(paste("diferencia anual total de suicidios de: ",pais," frente a Francia ",porcentaje))
+}
+```
+_Podemos observar como la diferencia con los paises del sur de europa son significativas, con algunos casos tasas un 60% más altas que los paises vecinos del sur de Francia como italia y España, y con el Reino Unido, incluso en los años mas duros de la crisis que azoto de forma mucho más fuerte a los vecinos al sur del pais galo._
 # Representación de los resultados a partir de tablas y gráficas.
+
+```{r}
+
+for (pais in paises){
+print(  ggplot(df[df$age != "all" & df$country==pais,], aes(x = year, y =suicides_no , colour = age))+geom_point()+facet_wrap(~ sex)+ggtitle(paste("suicidios totales en ",pais," por sexo y grupo de edad")))
+}
+for (pais in paises){
+print(  ggplot(df[df$age != "all" & df$country==pais,], aes(x = year, y =suicides_norm , colour = age))+geom_point()+facet_wrap(~ sex)+ggtitle(paste("suicidios de hombres en ",pais," por sexo y grupo de edad")))
+}
+
+totalhombres<-sum(df[df$sex=="male","suicides_no"])
+totalmujeres<-sum(df[df$sex=="female","suicides_no"])
+
+
+print(paste("Porcentaje de muertes de hombres frente a mujeres: ",(totalhombres/totalmujeres)*100))
+```
+
+
 # Resolución del problema.
-A partir de los resultados obtenidos, ¿cuáles son las conclusiones? ¿Los resultados permiten responder al problema?
+
+Como podemos observar de los resultados, la incidencia de los suicidios se concentran principalmente en los grupos de edad de 25-34 y de 35-54 años, aunque proporcionalmente estos dos grupos se ven superados por los mayores de 75 años. Tambien destaca que a nivel global la incidencia por sexo claramente es muchisimo mayor en los hombres que en las mujeres siendo en el computo total de los años estudiados un 300% mayor. 
